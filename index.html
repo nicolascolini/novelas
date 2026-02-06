@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novelas Globo • Buscador de Elenco</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #FF6B35;
+            --cor-secundaria: #004E89;
+            --cor-acento: #FFD23F;
+            --cor-fundo: #0A1128;
+            --cor-carta: #1C2541;
+            --cor-texto: #F4F4F9;
+            --cor-texto-secundario: #B8C5D6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Merriweather', serif;
+            background: linear-gradient(135deg, var(--cor-fundo) 0%, #001233 100%);
+            color: var(--cor-texto);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Efeito de grão cinematográfico */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            z-index: 0;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header com estilo cinematográfico */
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding-top: 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo {
+            font-family: 'Righteous', cursive;
+            font-size: 4rem;
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-acento) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .subtitulo {
+            font-size: 1.1rem;
+            color: var(--cor-texto-secundario);
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Área de busca */
+        .busca-container {
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            position: relative;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .input-wrapper {
+            position: relative;
+            background: var(--cor-carta);
+            border-radius: 16px;
+            padding: 0.5rem;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            box-shadow: 
+                0 12px 40px rgba(255, 107, 53, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            border-color: var(--cor-primaria);
+            transform: translateY(-2px);
+        }
+
+        #busca-input {
+            width: 100%;
+            padding: 1.2rem 3.5rem 1.2rem 1.5rem;
+            font-size: 1.1rem;
+            border: none;
+            background: transparent;
+            color: var(--cor-texto);
+            font-family: 'Merriweather', serif;
+            outline: none;
+        }
+
+        #busca-input::placeholder {
+            color: var(--cor-texto-secundario);
+            opacity: 0.6;
+        }
+
+        .busca-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, #E85D2C 100%);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+        }
+
+        .busca-btn:hover {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+        }
+
+        .busca-btn:active {
+            transform: translateY(-50%) scale(0.98);
+        }
+
+        /* Sugestões de autocomplete */
+        .sugestoes {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--cor-carta);
+            border-radius: 12px;
+            margin-top: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            display: none;
+            z-index: 10;
+        }
+
+        .sugestoes.ativo {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .sugestao-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sugestao-item:last-child {
+            border-bottom: none;
+        }
+
+        .sugestao-item:hover {
+            background: rgba(255, 107, 53, 0.1);
+            padding-left: 2rem;
+        }
+
+        /* Resultados */
+        .resultados-container {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .info-ator {
+            background: linear-gradient(135deg, var(--cor-secundaria) 0%, #003D6E 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 78, 137, 0.4);
+            border-left: 4px solid var(--cor-acento);
+        }
+
+        .nome-ator {
+            font-family: 'Righteous', cursive;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--cor-acento);
+        }
+
+        .total-producoes {
+            font-size: 1.1rem;
+            color: var(--cor-texto-secundario);
+        }
+
+        .producoes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .producao-card {
+            background: var(--cor-carta);
+            padding: 1.8rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 107, 53, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: slideInCard 0.5s ease backwards;
+        }
+
+        .producao-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--cor-primaria), var(--cor-acento));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .producao-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+            border-color: var(--cor-primaria);
+        }
+
+        .producao-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tipo-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: var(--cor-primaria);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .producao-titulo {
+            font-family: 'Righteous', cursive;
+            font-size: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--cor-texto);
+        }
+
+        .producao-info {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--cor-texto-secundario);
+            font-size: 0.95rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .personagem {
+            color: var(--cor-acento);
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: var(--cor-texto-secundario);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 107, 53, 0.1);
+            border-top: 3px solid var(--cor-primaria);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Mensagem vazia */
+        .mensagem-vazia {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--cor-texto-secundario);
+        }
+
+        .mensagem-vazia h3 {
+            font-family: 'Righteous', cursive;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--cor-texto);
+        }
+
+        /* Estatísticas do rodapé */
+        .footer-stats {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: var(--cor-texto-secundario);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Animações */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInCard {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .subtitulo {
+                font-size: 0.9rem;
+            }
+
+            .producoes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nome-ator {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">Dramaturgia Globo</h1>
+            <p class="subtitulo">Buscador de Elenco</p>
+        </header>
+
+        <div class="busca-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="busca-input" 
+                    placeholder="Digite o nome do ator ou atriz..."
+                    autocomplete="off"
+                >
+                <button class="busca-btn" id="busca-btn">🔍</button>
+            </div>
+            <div class="sugestoes" id="sugestoes"></div>
+        </div>
+
+        <div id="resultados"></div>
+
+        <div class="footer-stats" id="stats"></div>
+    </div>
+
+    <script>
+        const inputBusca = document.getElementById('busca-input');
+        const btnBusca = document.getElementById('busca-btn');
+        const sugestoesDiv = document.getElementById('sugestoes');
+        const resultadosDiv = document.getElementById('resultados');
+        const statsDiv = document.getElementById('stats');
+
+        let timeoutBusca = null;
+
+        // Carrega estatísticas ao iniciar
+        carregarEstatisticas();
+
+        // Event listeners
+        inputBusca.addEventListener('input', handleInput);
+        inputBusca.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscarAtor();
+        });
+        btnBusca.addEventListener('click', buscarAtor);
+
+        // Fecha sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.busca-container')) {
+                sugestoesDiv.classList.remove('ativo');
+            }
+        });
+
+        function handleInput() {
+            const termo = inputBusca.value.trim();
+            
+            clearTimeout(timeoutBusca);
+            
+            if (termo.length < 2) {
+                sugestoesDiv.classList.remove('ativo');
+                return;
+            }
+
+            timeoutBusca = setTimeout(() => {
+                carregarSugestoes(termo);
+            }, 300);
+        }
+
+        async function carregarSugestoes(termo) {
+            try {
+                const response = await fetch(`/api/atores?termo=${encodeURIComponent(termo)}`);
+                const atores = await response.json();
+                
+                if (atores.length > 0) {
+                    sugestoesDiv.innerHTML = atores.map(nome => 
+                        `<div class="sugestao-item" onclick="selecionarSugestao('${nome.replace(/'/g, "\\'")}')">${nome}</div>`
+                    ).join('');
+                    sugestoesDiv.classList.add('ativo');
+                } else {
+                    sugestoesDiv.classList.remove('ativo');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar sugestões:', error);
+            }
+        }
+
+        function selecionarSugestao(nome) {
+            inputBusca.value = nome;
+            sugestoesDiv.classList.remove('ativo');
+            buscarAtor();
+        }
+
+        async function buscarAtor() {
+            const nome = inputBusca.value.trim();
+            
+            if (nome.length < 2) {
+                resultadosDiv.innerHTML = `
+                    <div class="mensagem-vazia">
+                        <h3>🎬</h3>
+                        <p>Digite pelo menos 2 caracteres para buscar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mostra loading
+            resultadosDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Buscando produções...</p>
+                </div>
+            `;
+
+            sugestoesDiv.classList.remove('ativo');
+
+            try {
+                const response = await fetch(`/api/buscar?nome=${encodeURIComponent(nome)}`);
+                const dados = await response.json();
+
+                if (dados.erro) {
+                    resultadosDiv.innerHTML = `
+                        <div class="mensagem-vazia">
+                            <h3>⚠️</h3>
+                            <p>${dados.erro}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (dados.total === 0) {
+                    resultadosDiv.innerHTML = `
+                        <div class="mensagem-vazia">
+                            <h3>🎭</h3>
+                            <p>Nenhuma produção encontrada para "${nome}"</p>
+                            <p style="margin-top: 1rem; font-size: 0.9rem;">Tente buscar por outro nome ou verifique a ortografia</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                exibirResultados(dados);
+            } catch (error) {
+                console.error('Erro na busca:', error);
+                resultadosDiv.innerHTML = `
+                    <div class="mensagem-vazia">
+                        <h3>❌</h3>
+                        <p>Erro ao buscar. Tente novamente.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function exibirResultados(dados) {
+            const infoHtml = `
+                <div class="info-ator">
+                    <h2 class="nome-ator">${dados.ator}</h2>
+                    <p class="total-producoes">${dados.total} ${dados.total === 1 ? 'produção' : 'produções'} encontrada${dados.total === 1 ? '' : 's'}</p>
+                </div>
+            `;
+
+            const cardsHtml = dados.producoes.map((prod, index) => `
+                <div class="producao-card" style="animation-delay: ${index * 0.05}s">
+                    <span class="tipo-badge">${prod.tipo}</span>
+                    <h3 class="producao-titulo">${prod.titulo}</h3>
+                    <div class="producao-info">
+                        <div class="info-item">
+                            <span>📅</span>
+                            <span>${prod.anos}</span>
+                        </div>
+                    </div>
+                    <div class="personagem">
+                        <span>🎭</span> ${prod.personagem}
+                    </div>
+                </div>
+            `).join('');
+
+            resultadosDiv.innerHTML = `
+                <div class="resultados-container">
+                    ${infoHtml}
+                    <div class="producoes-grid">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function carregarEstatisticas() {
+            try {
+                const response = await fetch('/api/estatisticas');
+                const stats = await response.json();
+                
+                statsDiv.innerHTML = `
+                    📊 Base de dados: ${stats.total_atores} atores • ${stats.total_producoes} produções
+                `;
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+    </script>
+</body>
+</html>
